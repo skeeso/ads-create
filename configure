@@ -13,20 +13,17 @@ EXTBIG=`echo "$REALM" | cut -d"." -f2`
 TMP=/tmp
 PD=`pwd`
 
-# CREATE A COPY OF THE CONFIG
-#cp -R $PD/apacheds-2.0.0-M20.orig.conf $PD/conf
-
 function exec_prepare(){
 ##### START THE PREPARATION #####
 OSREL=`uname -a | grep "Ubuntu" | wc -l`
 
-  printf "\033[1mxxxxxxxxxx\n[01.i] Preparing environment...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+  printf "\033[1m\nxxxxxxxxxx\n[01.i] Preparing environment...\nxxxxxxxxxx\033[0m\n\n";sleep 1
   if [[ "$OSREL" -ne "0" ]]; then
 	sudo apt-get -y update
 	sudo apt-get -y install openjdk-7-jre-headless openjdk-7-jre-lib ntp ntpdate cyrus-sasl2-heimdal-dbg \
 	libgssapi3-heimdal libheimbase1-heimdal libsasl2-2 heimdal-clients ldap-utils
 
-	printf "\033[1mxxxxxxxxxx\n[02.i] Generating krb5.conf...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+	printf "\033[1m\nxxxxxxxxxx\n[02.i] Generating krb5.conf...\nxxxxxxxxxx\033[0m\n\n";sleep 1
 	mv /etc/krb5.conf /etc/orig.krb5.conf
 	cat <<EOF > /etc/krb5.conf
 	[libdefaults]
@@ -113,6 +110,10 @@ exit 0
 
 
 function exec_config(){
+printf "\033[1mxxxxxxxxxx\n[05.i] Creating configuration...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+# CREATE A COPY OF THE CONFIG
+cp -R $PD/apacheds-2.0.0-M20.orig.conf $PD/conf
+
 ##### START THE CONFIGURATION #####
 # [01] OU=INDEXES
 OUINDEXES=$PD/conf/ou=config/ads-directoryserviceid=default/ou=partitions/ads-partitionid=example/ou=indexes
@@ -168,8 +169,19 @@ sed -i "s/ZG46IGRjPWV4YW1wbGUsZGM9Y29tCmRjOiBleGFtcGxlCm9iamVjdGNsYXNzOiBkb21haW
 sed -i "s/ZG46IGRjPWV4YW1wbGUsZGM9Y29tCmRjOiBleGFtcGxlCm9iamVjdGNsYXNzOiBkb21haW4Kb2JqZWN0Y2xhc3M6IHRvcAoK/`cat $TMP/context.b64`/g" $PARTITIONS/ads-partitionid=$LDAPNAME.ldif
 }
 
+execute apply_config(){
+if [[ "$OSREL" -ne "0" ]]; then
+	cp -R $PD/conf /var/lib/apacheds-2.0.0-M20/default/.
+	printf "\033[1mxxxxxxxxxx\n[06.i] Applying changes...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+else
+	printf "\033[1mxxxxxxxxxx\n[06.i] Applying changes XXX...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+fi
+}
+
 # [08] SHOW CONFIGURATION
 #egrep -R "$LDAPNAME" $CONF/
 
 exec_prepare
+exec_config
+apply_config
 exit 0
