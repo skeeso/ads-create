@@ -70,7 +70,7 @@ OSREL=`uname -a | grep "Ubuntu" | wc -l`
 		krb4_convert = true
 		krb4_get_tickets = false
 EOF
-	printf "/etc/krb5.conf completed.";
+	printf "/etc/krb5.conf completed.\n\n";
 
         if [[ "`uname -m`" == "x86_64" ]]; then
                 printf "\033[1mxxxxxxxxxx\n[03.i] Detected 64-bit Ubuntu...\nxxxxxxxxxx\033[0m\n\n";sleep 1
