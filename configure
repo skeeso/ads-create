@@ -1,0 +1,166 @@
+#!/bin/bash
+printf "Enter the server's FQDN: ";
+read resp_fqdn
+printf "Enter the REALM: ";
+read resp_realm
+
+LDAPHOST=$resp_fqdn
+LDAPNAME=`echo "$LDAPHOST" | cut -d"." -f2`
+EXTSMALL=`echo "$LDAPHOST" | cut -d"." -f3`
+REALM=$resp_realm
+REALMNAME=`echo "$REALM" | cut -d"." -f1`
+EXTBIG=`echo "$REALM" | cut -d"." -f2`
+TMP=/tmp
+PD=`pwd`
+
+# CREATE A COPY OF THE CONFIG
+#cp -R $PD/apacheds-2.0.0-M20.orig.conf $PD/conf
+
+function exec_install(){
+##### START THE INSTALLATION #####
+OSREL=`uname -a | grep "Ubuntu" | wc -l`
+
+# [01] UPDATE THE SYSTEM
+  printf "\033[1mxxxxxxxxxx\n[01.i] Preparing environment...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+  if [[ "$OSREL" -ne "0" ]]; then
+	sudo apt-get -y update
+	sudo apt-get -y install openjdk-7-jre-headless openjdk-7-jre-lib ntp ntpdate cyrus-sasl2-heimdal-dbg \
+	libgssapi3-heimdal libheimbase1-heimdal libsasl2-2 heimdal-clients ldap-utils
+
+  	if [[ "`uname -m`" == "x86_64" ]]; then
+        	printf "\033[1mxxxxxxxxxx\n[02.i] Detected 64-bit Ubuntu...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+        	DEBN64=http://www.gtlib.gatech.edu/pub/apache/directory/apacheds/dist/2.0.0-M20/apacheds-2.0.0-M20-amd64.deb
+        	uname -a
+		wget "$DEBN64" -O $TMP/apacheds-2.0.0-M20-amd64.deb
+	else
+        	printf "\033[1mxxxxxxxxxx\n[02.i] Detected 32-bit Ubuntu...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+		DEBN32=http://www.gtlib.gatech.edu/pub/apache/directory/apacheds/dist/2.0.0-M20/apacheds-2.0.0-M20-i386.deb
+        	uname -a
+		wget "$DEBN32" -O $TMP/apacheds-2.0.0-M20-i386.deb
+	fi
+
+	printf "\033[1mxxxxxxxxxx\n[03.i] Generating krb5.conf...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+	mv /etc/krb5.conf /etc/orig.krb5.conf
+	cat <<EOF > /etc/krb5.conf
+	[libdefaults]
+		default_realm = $REALM
+		default_tgs_enctypes = aes256-cts-hmac-sha1-96
+		default_tkt_enctypes = aes256-cts-hmac-sha1-96
+		permitted_enctypes = aes256-cts-hmac-sha1-96
+
+	# The following krb5.conf variables are only for MIT Kerberos.
+		krb4_config = /etc/krb.conf
+		krb4_realms = /etc/krb.realms
+		kdc_timesync = 1
+		ccache_type = 4
+		forwardable = true
+		proxiable = true
+
+	# The following libdefaults parameters are only for Heimdal Kerberos.
+		v4_instance_resolve = false
+		v4_name_convert = {
+			host = {
+				rcmd = host
+				ftp = ftp
+			}
+			plain = {
+				something = something-else
+			}
+		}
+		fcc-mit-ticketflags = true
+
+	[realms]
+		$REALM = {
+			kdc = $LDAPHOST:60088
+			admin_server = $LDAPHOST:60088
+		}
+
+	[domain_realm]
+		$LDAPNAME.$EXTSMALL = $REALM
+		.$LDAPNAME.$EXTSMALL = $REALM
+
+	[login]
+		krb4_convert = true
+		krb4_get_tickets = false
+EOF
+
+else
+	sudo yum -y install java-1.8.0-openjdk-headless java-1.8.0-openjdk-devel ntp ntpdate cyrus-sasl-ldap \
+	cyrus-sasl-gssapi cyrus-sasl-lib cyrus-sasl
+	sudo yum -y groupinstall "Development Tools"
+
+	if [[ "`uname -m`" == "x86_64" ]]; then
+        	echo "Detected 64-bit CentOS: `uname -a`...";
+        	RHEL64=http://apache.arvixe.com/directory/apacheds/dist/2.0.0-M20/apacheds-2.0.0-M20-x86_64.rpm
+        	wget --directory-prefix=$TMP "$RHEL64"
+	else
+        	echo "Detected 32-bit CentOS: `uname -a`...";
+        	RHEL32=http://apache.arvixe.com/directory/apacheds/dist/2.0.0-M20/apacheds-2.0.0-M20-i386.rpm
+        	wget --directory-prefix=$TMP "$RHEL32"
+	fi
+fi
+
+
+exit 0
+}
+
+function exec_config(){
+##### START THE CONFIGURATION #####
+# [01] OU=INDEXES
+OUINDEXES=$PD/conf/ou=config/ads-directoryserviceid=default/ou=partitions/ads-partitionid=example/ou=indexes
+for i in `ls $OUINDEXES | tr '\n' '\0' | xargs -0 -n 1 basename`; { sed -i "s/example/$LDAPNAME/g" $OUINDEXES/$i; }
+
+# [02] PARTITIONID
+PARTITIONID=$PD/conf/ou=config/ads-directoryserviceid=default/ou=partitions/ads-partitionid=example
+sed -i "s/example/$LDAPNAME/g" $PARTITIONID/ou=indexes.ldif
+
+# [03] OU=PARTITIONS
+PARTITIONS=$PD/conf/ou=config/ads-directoryserviceid=default/ou=partitions
+sed -i "s/example/$LDAPNAME/g" $PARTITIONS/ads-partitionid=example.ldif
+sed -i "s/dc=com/dc=$EXTSMALL/g" $PARTITIONS/ads-partitionid=example.ldif
+mv $PARTITIONS/ads-partitionid=example/ $PARTITIONS/ads-partitionid=$LDAPNAME/
+mv $PARTITIONS/ads-partitionid=example.ldif $PARTITIONS/ads-partitionid=$LDAPNAME.ldif
+
+# [04] OU=SERVERS
+OUSERVERS=$PD/conf/ou=config/ads-directoryserviceid=default/ou=servers 
+sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
+sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
+sed -i "/des-cbc-md5/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+sed -i "/des3-cbc-sha1-kd/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+sed -i "/rc4-hmac/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+sed -i "/aes128-cts-hmac-sha1-96/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+
+sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+sed -i "s/ldap.example.com/$LDAPHOST/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+
+# [05] OU=CONFIG
+OUCONFIG=$PD/conf/ou=config
+sed -i "s/ads-dsAllowAnonymousAccess: FALSE/ads-dsAllowAnonymousAccess: TRUE/g" $OUCONFIG/ads-directoryserviceid=default.ldif
+sed -i "s/ads-enabled: FALSE/ads-enabled: TRUE/g" $OUCONFIG/ads-directoryserviceid=default/ou=interceptors/ads-interceptorid=keyderivationinterceptor.ldif
+
+CONF=$PD/conf
+sed -i "s/ldap.example.com/$LDAPHOST/g" $CONF/config.ldif_migrated
+sed -i "s/dc=com/dc=$EXTSMALL/g" $CONF/config.ldif_migrated 
+sed -i "s/EXAMPLE.COM/$REALM/g" $CONF/config.ldif_migrated 
+sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $CONF/config.ldif_migrated 
+sed -i "s/example/$LDAPNAME/g" $CONF/config.ldif_migrated
+
+# [06] CONTEXT ENTRY
+echo "dn: dc=$LDAPNAME,dc=$EXTSMALL" > $TMP/context.ldif
+echo "dc: $LDAPNAME" >> $TMP/context.ldif
+echo "objectclass: domain" >> $TMP/context.ldif
+echo "objectclass: top" >> $TMP/context.ldif
+echo " " >> $TMP/context.ldif
+cat $TMP/context.ldif | base64 -w 0 > $TMP/context.b64
+
+# [07] APPLY CONTEXT ENTRY
+sed -i "s/ZG46IGRjPWV4YW1wbGUsZGM9Y29tCmRjOiBleGFtcGxlCm9iamVjdGNsYXNzOiBkb21haW4Kb2JqZWN0Y2xhc3M6IHRvcAoK/`cat $TMP/context.b64`/g" $CONF/config.ldif_migrated
+sed -i "s/ZG46IGRjPWV4YW1wbGUsZGM9Y29tCmRjOiBleGFtcGxlCm9iamVjdGNsYXNzOiBkb21haW4Kb2JqZWN0Y2xhc3M6IHRvcAoK/`cat $TMP/context.b64`/g" $PARTITIONS/ads-partitionid=$LDAPNAME.ldif
+}
+
+# [08] SHOW CONFIGURATION
+#egrep -R "$LDAPNAME" $CONF/
+exec_install
+exit 0
