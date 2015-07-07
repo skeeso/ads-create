@@ -1,0 +1,9 @@
+dn: ou=partitions,ads-directoryServiceId=default,ou=config
+entryParentId: 5f99e89f-590f-4667-ba8e-c017b525dca7
+ou: partitions
+entryUUID: af4d352c-b050-4234-9bae-5ef4dbdf591d
+objectclass: organizationalUnit
+objectclass: top
+creatorsName: uid=admin,ou=system
+createTimestamp: 20150706122457.691Z
+entryCSN: 20150706122457.691000Z#000000#000#000000

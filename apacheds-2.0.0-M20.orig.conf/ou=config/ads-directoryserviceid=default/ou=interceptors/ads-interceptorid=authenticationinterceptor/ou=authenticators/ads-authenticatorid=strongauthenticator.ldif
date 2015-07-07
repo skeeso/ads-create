@@ -1,0 +1,17 @@
+dn: ads-authenticatorid=strongauthenticator,ou=authenticators,ads-interceptorId=
+ authenticationInterceptor,ou=interceptors,ads-directoryServiceId=default,ou=con
+ fig
+ads-authenticatorclass: org.apache.directory.server.core.authn.StrongAuthenticat
+ or
+objectclass: top
+objectclass: ads-base
+objectclass: ads-authenticator
+objectclass: ads-authenticatorImpl
+ads-basedn: 
+entryParentId: d4fd0a4b-27ea-407a-a6af-9be317b87af5
+entryUUID: b22bb0db-bae1-4fff-871a-6952de445887
+creatorsName: uid=admin,ou=system
+createTimestamp: 20150706122457.558Z
+entryCSN: 20150706122457.558000Z#000000#000#000000
+ads-authenticatorid: strongauthenticator
+ads-enabled: TRUE

@@ -1,0 +1,17 @@
+dn: ads-directoryServiceId=default,ou=config
+entryParentId: 9b369165-3cbc-4f09-9fba-01b216dba236
+createTimestamp: 20150706122457.506Z
+ads-enabled: TRUE
+ads-dsdenormalizeopattrsenabled: FALSE
+ads-dspasswordhidden: FALSE
+objectclass: top
+objectclass: ads-base
+objectclass: ads-directoryService
+ads-dsreplicaid: 1
+ads-directoryserviceid: default
+ads-dsaccesscontrolenabled: FALSE
+ads-dsallowanonymousaccess: TRUE
+ads-dssyncperiodmillis: 15000
+entryUUID: 5f99e89f-590f-4667-ba8e-c017b525dca7
+creatorsName: uid=admin,ou=system
+entryCSN: 20150706122457.506000Z#000000#000#000000

@@ -1,0 +1,15 @@
+dn: ads-interceptorId=referralInterceptor,ou=interceptors,ads-directoryServiceId
+ =default,ou=config
+objectclass: top
+objectclass: ads-base
+objectclass: ads-interceptor
+entryParentId: 82dfba55-20e5-4c95-84f9-4c732bb70776
+entryUUID: 65b18942-673e-4433-8078-4056dbd6f1df
+ads-interceptororder: 3
+creatorsName: uid=admin,ou=system
+createTimestamp: 20150706122457.605Z
+ads-interceptorid: referralInterceptor
+entryCSN: 20150706122457.605000Z#000000#000#000000
+ads-interceptorclassname: org.apache.directory.server.core.referral.ReferralInte
+ rceptor
+ads-enabled: TRUE

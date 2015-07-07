@@ -1,0 +1,10 @@
+dn: ou=indexes,ads-partitionId=system,ou=partitions,ads-directoryServiceId=defau
+ lt,ou=config
+entryParentId: 6ddad263-10e6-43a9-bf48-9e7392ecc451
+ou: indexes
+entryUUID: 2016ae01-a907-4cba-95e7-def276dd1d81
+objectclass: organizationalUnit
+objectclass: top
+creatorsName: uid=admin,ou=system
+createTimestamp: 20150706122457.699Z
+entryCSN: 20150706122457.698000Z#000000#000#000000

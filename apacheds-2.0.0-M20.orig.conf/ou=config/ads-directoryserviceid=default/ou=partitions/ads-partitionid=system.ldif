@@ -1,0 +1,17 @@
+dn: ads-partitionId=system,ou=partitions,ads-directoryServiceId=default,ou=confi
+ g
+ads-partitioncachesize: 10000
+ads-partitionid: system
+objectclass: top
+objectclass: ads-base
+objectclass: ads-partition
+objectclass: ads-jdbmPartition
+ads-partitionsuffix: ou=system
+entryParentId: af4d352c-b050-4234-9bae-5ef4dbdf591d
+entryUUID: 6ddad263-10e6-43a9-bf48-9e7392ecc451
+ads-partitionsynconwrite: TRUE
+creatorsName: uid=admin,ou=system
+createTimestamp: 20150706122457.696Z
+ads-jdbmpartitionoptimizerenabled: TRUE
+entryCSN: 20150706122457.696000Z#000000#000#000000
+ads-enabled: TRUE

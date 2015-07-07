@@ -1,0 +1,10 @@
+dn: ou=transports,ads-serverId=kerberosServer,ou=servers,ads-directoryServiceId=
+ default,ou=config
+entryParentId: 7eb96112-9d68-4cda-8d65-aab8a0098c23
+ou: transports
+entryUUID: be5559c7-a9bd-4fe7-8f92-d1e0f97142f6
+objectclass: organizationalUnit
+objectclass: top
+creatorsName: uid=admin,ou=system
+createTimestamp: 20150706122457.823Z
+entryCSN: 20150706122457.823000Z#000000#000#000000
