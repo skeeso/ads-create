@@ -1,5 +1,6 @@
 # ads-create
-Apache Directory Studio Easy LDAP Kerberos Configurator
+Apache Directory Studio Easy LDAP+Kerberos Configurator
+
 Tested with the following Linux distributions:
 
 1. Ubuntu 15.04 (Vivid Vervet) x86_64
