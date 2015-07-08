@@ -137,7 +137,6 @@ printf "\033[1m\nxxxxxxxxxx\n[05.i] Creating configuration...\nxxxxxxxxxx\033[0m
 	cat $TMP/context.ldif | base64 -w 0 > $TMP/context.b64
 
 	# [E] APPLY CONTEXT ENTRY
-	sed -i "s/ZG46IGRjPWV4YW1wbGUsZGM9Y29tCmRjOiBleGFtcGxlCm9iamVjdGNsYXNzOiBkb21haW4Kb2JqZWN0Y2xhc3M6IHRvcAoK/`cat $TMP/context.b64`/g" $CONF/config.ldif_migrated
 	sed -i "s/ZG46IGRjPWV4YW1wbGUsZGM9Y29tCmRjOiBleGFtcGxlCm9iamVjdGNsYXNzOiBkb21haW4Kb2JqZWN0Y2xhc3M6IHRvcAoK/`cat $TMP/context.b64`/g" $PARTITIONS/ads-partitionid=$LDAPNAME.ldif
 	printf "Done.\n";
 }
@@ -248,13 +247,16 @@ delete: ads-saslRealms
 ads-saslRealms: apache.org
 -
 
+dn: ads-partitionId=example,ou=partitions,ads-directoryServiceId=default,ou=config
+changetype: delete
+
 dn: dc=example,dc=com
 changetype: delete
 
 EOD
 
 ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f $TMP/delexam.ldif
-printf "Removed example.";
+printf "Done.";
 }
 
 function start_krb5(){
@@ -395,7 +397,6 @@ ldapsearch -h ldap.arpa.ph -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=
 # LOAD ADDTO_CONF
 printf "\033[1m\nxxxxxxxxxx\n[10.i] Applying final changes...\nxxxxxxxxxx\033[0m\n\n";sleep 1
 addto_conf
-printf "Done.\n";
 
 printf "\033[1m\nxxxxxxxxxx\n[11.i] Final restart...\nxxxxxxxxxx\033[0m\n\n";sleep 1
 # RESTARTING ADS
@@ -405,7 +406,7 @@ lsof -i:10389
 /etc/init.d/apacheds-2.0.0-M20-default start
 sleep 15
 lsof -i:10389
-
+lsof -i:60088
 echo "`ktutil -k /tmp/majsf.keytab add -p majsf@ARPA.PH -e aes128-cts-hmac-sha1-96 -V 1`"
 echo "`kinit majsf@ARPA.PH`"
 
