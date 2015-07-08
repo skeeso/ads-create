@@ -13,11 +13,12 @@ EXTBIG=`echo "$REALM" | cut -d"." -f2`
 TMP=/tmp
 PD=`pwd`
 
+# [01] EXECUTE PREPARATION
 function exec_prepare(){
-##### START THE PREPARATION #####
+printf "\033[1m\nxxxxxxxxxx\n[01.i] Preparing environment...\nxxxxxxxxxx\033[0m\n\n";sleep 1
 OSREL=`uname -a | grep "Ubuntu" | wc -l`
 
-  printf "\033[1m\nxxxxxxxxxx\n[01.i] Preparing environment...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+  # CHECK SYSTEM IF DEBIAN OR RHEL
   if [[ "$OSREL" -ne "0" ]]; then
 	sudo apt-get -y update
 	sudo apt-get -y install openjdk-7-jre-headless openjdk-7-jre-lib ntp ntpdate cyrus-sasl2-heimdal-dbg \
@@ -106,75 +107,75 @@ else
 fi
 }
 
-
+# [02] EXECUTE CREATE CONFIGURATION
 function exec_config(){
 printf "\033[1m\nxxxxxxxxxx\n[05.i] Creating configuration...\nxxxxxxxxxx\033[0m\n\n";sleep 1
-# CREATE A COPY OF THE CONFIG
-cp -R $PD/apacheds-2.0.0-M20.orig.conf $PD/conf
+	cp -R $PD/apacheds-2.0.0-M20.orig.conf $PD/conf
 
-##### START THE CONFIGURATION #####
-# [01] OU=INDEXES
-OUINDEXES=$PD/conf/ou=config/ads-directoryserviceid=default/ou=partitions/ads-partitionid=example/ou=indexes
-for i in `ls $OUINDEXES | tr '\n' '\0' | xargs -0 -n 1 basename`; { sed -i "s/example/$LDAPNAME/g" $OUINDEXES/$i; }
+	##### START THE CONFIGURATION #####
+	# [A] OU=INDEXES
+	OUINDEXES=$PD/conf/ou=config/ads-directoryserviceid=default/ou=partitions/ads-partitionid=example/ou=indexes
+		for i in `ls $OUINDEXES | tr '\n' '\0' | xargs -0 -n 1 basename`; { sed -i "s/example/$LDAPNAME/g" $OUINDEXES/$i; }
 
-# [02] PARTITIONID
-PARTITIONID=$PD/conf/ou=config/ads-directoryserviceid=default/ou=partitions/ads-partitionid=example
-sed -i "s/example/$LDAPNAME/g" $PARTITIONID/ou=indexes.ldif
+	# [B] PARTITIONID
+	PARTITIONID=$PD/conf/ou=config/ads-directoryserviceid=default/ou=partitions/ads-partitionid=example
+		sed -i "s/example/$LDAPNAME/g" $PARTITIONID/ou=indexes.ldif
 
-# [03] OU=PARTITIONS
-PARTITIONS=$PD/conf/ou=config/ads-directoryserviceid=default/ou=partitions
-sed -i "s/example/$LDAPNAME/g" $PARTITIONS/ads-partitionid=example.ldif
-sed -i "s/dc=com/dc=$EXTSMALL/g" $PARTITIONS/ads-partitionid=example.ldif
-mv $PARTITIONS/ads-partitionid=example/ $PARTITIONS/ads-partitionid=$LDAPNAME/
-mv $PARTITIONS/ads-partitionid=example.ldif $PARTITIONS/ads-partitionid=$LDAPNAME.ldif
+	# [C] OU=PARTITIONS
+	PARTITIONS=$PD/conf/ou=config/ads-directoryserviceid=default/ou=partitions
+		sed -i "s/example/$LDAPNAME/g" $PARTITIONS/ads-partitionid=example.ldif
+		sed -i "s/dc=com/dc=$EXTSMALL/g" $PARTITIONS/ads-partitionid=example.ldif
+		mv $PARTITIONS/ads-partitionid=example/ $PARTITIONS/ads-partitionid=$LDAPNAME/
+		mv $PARTITIONS/ads-partitionid=example.ldif $PARTITIONS/ads-partitionid=$LDAPNAME.ldif
 
-# [06] CONTEXT ENTRY
-echo "dn: dc=$LDAPNAME,dc=$EXTSMALL" > $TMP/context.ldif
-echo "dc: $LDAPNAME" >> $TMP/context.ldif
-echo "objectclass: domain" >> $TMP/context.ldif
-echo "objectclass: top" >> $TMP/context.ldif
-echo " " >> $TMP/context.ldif
-cat $TMP/context.ldif | base64 -w 0 > $TMP/context.b64
+	# [D] CONTEXT ENTRY
+	echo "dn: dc=$LDAPNAME,dc=$EXTSMALL" > $TMP/context.ldif
+	echo "dc: $LDAPNAME" >> $TMP/context.ldif
+	echo "objectclass: domain" >> $TMP/context.ldif
+	echo "objectclass: top" >> $TMP/context.ldif
+	echo " " >> $TMP/context.ldif
+	cat $TMP/context.ldif | base64 -w 0 > $TMP/context.b64
 
-# [07] APPLY CONTEXT ENTRY
-#sed -i "s/ZG46IGRjPWV4YW1wbGUsZGM9Y29tCmRjOiBleGFtcGxlCm9iamVjdGNsYXNzOiBkb21haW4Kb2JqZWN0Y2xhc3M6IHRvcAoK/`cat $TMP/context.b64`/g" $CONF/config.ldif_migrated
-sed -i "s/ZG46IGRjPWV4YW1wbGUsZGM9Y29tCmRjOiBleGFtcGxlCm9iamVjdGNsYXNzOiBkb21haW4Kb2JqZWN0Y2xhc3M6IHRvcAoK/`cat $TMP/context.b64`/g" $PARTITIONS/ads-partitionid=$LDAPNAME.ldif
-
-printf "Completed.\n";
-
+	# [E] APPLY CONTEXT ENTRY
+	#sed -i "s/ZG46IGRjPWV4YW1wbGUsZGM9Y29tCmRjOiBleGFtcGxlCm9iamVjdGNsYXNzOiBkb21haW4Kb2JqZWN0Y2xhc3M6IHRvcAoK/`cat $TMP/context.b64`/g" $CONF/config.ldif_migrated
+	sed -i "s/ZG46IGRjPWV4YW1wbGUsZGM9Y29tCmRjOiBleGFtcGxlCm9iamVjdGNsYXNzOiBkb21haW4Kb2JqZWN0Y2xhc3M6IHRvcAoK/`cat $TMP/context.b64`/g" $PARTITIONS/ads-partitionid=$LDAPNAME.ldif
+	printf "Completed.\n";
 }
 
+# [03] EXECUTE APPLY CONFIGURATION
 function apply_config(){
+printf "\033[1m\nxxxxxxxxxx\n[06.i] Applying changes...\nxxxxxxxxxx\033[0m\n\n";sleep 1
 if [[ "$OSREL" -ne "0" ]]; then
 	cp -R $PD/conf/ /var/lib/apacheds-2.0.0-M20/default/.
 	chown -R apacheds:apacheds /var/lib/apacheds-2.0.0-M20/
-	printf "\033[1m\nxxxxxxxxxx\n[06.i] Applying changes...\nxxxxxxxxxx\033[0m\n\n";sleep 1
 
-	# [04] OU=SERVERS
+	# [F] OU=SERVERS
 	OUSERVERS=$PD/conf/ou=config/ads-directoryserviceid=default/ou=servers
-	sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
-	sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
-	sed -i "/des-cbc-md5/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
-	sed -i "/des3-cbc-sha1-kd/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
-	sed -i "/rc4-hmac/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
-	sed -i "/aes128-cts-hmac-sha1-96/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+		sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
+		sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
+		sed -i "/des-cbc-md5/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+		sed -i "/des3-cbc-sha1-kd/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+		sed -i "/rc4-hmac/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+		sed -i "/aes128-cts-hmac-sha1-96/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+		sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+		sed -i "s/ldap.example.com/$LDAPHOST/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+		sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+		sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=ldapserver.ldif
 
-	sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
-	sed -i "s/ldap.example.com/$LDAPHOST/g" $OUSERVERS/ads-serverid=ldapserver.ldif
-	sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
-	sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+	# [G] CONF
+	CONF=$PD/conf
+		sed -i "s/ldap.example.com/$LDAPHOST/g" $CONF/config.ldif_migrated
+		sed -i "s/dc=com/dc=$EXTSMALL/g" $CONF/config.ldif_migrated
+		sed -i "s/EXAMPLE.COM/$REALM/g" $CONF/config.ldif_migrated
+		sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $CONF/config.ldif_migrated
+		sed -i "s/example/$LDAPNAME/g" $CONF/config.ldif_migrated
+	printf "Config applied.\n";
+else
+	printf "\033[1mxxxxxxxxxx\n[06.i] Applying changes XXX...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+fi
+}
 
-CONF=$PD/conf
-sed -i "s/ldap.example.com/$LDAPHOST/g" $CONF/config.ldif_migrated
-sed -i "s/dc=com/dc=$EXTSMALL/g" $CONF/config.ldif_migrated
-sed -i "s/EXAMPLE.COM/$REALM/g" $CONF/config.ldif_migrated
-sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $CONF/config.ldif_migrated
-sed -i "s/example/$LDAPNAME/g" $CONF/config.ldif_migrated
-
-/etc/init.d/apacheds-2.0.0-M20-default start
-sleep 15
-lsof -i:10389
-
+function addto_conf(){
 cat <<EOD > $TMP/delexam.ldif
 version: 1
 
@@ -187,14 +188,9 @@ changetype: delete
 
 EOD
 
-ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f /tmp/delexam.ldif
-
-	printf "Applied.\n";
-else
-	printf "\033[1mxxxxxxxxxx\n[06.i] Applying changes XXX...\nxxxxxxxxxx\033[0m\n\n";sleep 1
-fi
+ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f $TMP/delexam.ldif
+printf "Removed example.";
 }
-
 
 function load_data(){
 cat <<EOC > $TMP/groups.ldif
@@ -303,7 +299,16 @@ rm -rf /var/lib/apacheds-2.0.0-M20/default/partitions/example/
 rm -rf /var/lib/apacheds-2.0.0-M20/default/cache/*
 
 exec_config
+
 apply_config
+
+# START ADS
+/etc/init.d/apacheds-2.0.0-M20-default start
+sleep 15
+lsof -i:10389
+
+addto_conf
+
 start_krb5
 
 # RESTARTING ADS
