@@ -260,7 +260,7 @@ userPassword: q1w2e3r4
 
 EOC
 
-ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f /tmp/groups.ldif
+#ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f /tmp/groups.ldif
 }
 
 exec_prepare
