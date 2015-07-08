@@ -187,10 +187,15 @@ fi
 
 exec_prepare
 /etc/init.d/apacheds-2.0.0-M20-default start
+sleep 15
 lsof -i:10389
 /etc/init.d/apacheds-2.0.0-M20-default stop
+sleep 15
 exec_config
 
+/etc/init.d/apacheds-2.0.0-M20-default start
+sleep 15
+lsof -i:10389
 
 #apply_config
 exit 0
