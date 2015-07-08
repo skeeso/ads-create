@@ -200,23 +200,11 @@ function load_data(){
 cat <<EOC > $TMP/groups.ldif
 version: 1
 
-dn: dc=security,dc=$LDAPNAME,dc=$EXTSMALL
+dn: dc=$LDAPNAME,dc=$EXTSMALL
 changetype: add
 objectClass: top
 objectClass: domain
 dc: security
--
-dn: ou=services,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
-changetype: add
-objectClass: top
-objectClass: organizationalUnit
-ou: services
--
-dn: ou=users,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
-changetype: add
-objectClass: top
-objectClass: organizationalUnit
-ou: users
 
 EOC
 
