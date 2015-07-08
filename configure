@@ -195,6 +195,12 @@ ads-krbEncryptionTypes: des3-cbc-sha1-kd
 delete: ads-krbEncryptionTypes
 ads-krbEncryptionTypes: des-cbc-md5
 -
+delete: ads-krbEncryptionTypes
+ads-krbEncryptionTypes: aes128-cts-hmac-sha1-96
+-
+add: ads-krbEncryptionTypes
+ads-krbEncryptionTypes: aes256-cts-hmac-sha1-96
+-
 delete: ads-krbPrimaryRealm
 ads-krbPrimaryRealm: EXAMPLE.COM
 -
