@@ -268,7 +268,7 @@ userPassword: q1w2e3r4
 
 EOC
 
-ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f /tmp/groups.ldif
+#ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f /tmp/groups.ldif
 printf "Groups LDIF loaded.\n";
 }
 
@@ -295,9 +295,9 @@ lsof -i:10389
 
 addto_conf
 
-load_data
-
 start_krb5
+
+load_data
 
 # RESTARTING ADS
 /etc/init.d/apacheds-2.0.0-M20-default stop
