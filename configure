@@ -148,21 +148,22 @@ function apply_config(){
 if [[ "$OSREL" -ne "0" ]]; then
 	cp -R $PD/conf/ /var/lib/apacheds-2.0.0-M20/default/.
 	chown -R apacheds:apacheds /var/lib/apacheds-2.0.0-M20/
+	rm -rf /var/lib/apacheds-2.0.0-M20/default/partitions/example/ 
 	printf "\033[1m\nxxxxxxxxxx\n[06.i] Applying changes...\nxxxxxxxxxx\033[0m\n\n";sleep 1
 
-# [04] OU=SERVERS
-#OUSERVERS=$PD/conf/ou=config/ads-directoryserviceid=default/ou=servers
-#sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
-#sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
-#sed -i "/des-cbc-md5/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
-#sed -i "/des3-cbc-sha1-kd/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
-#sed -i "/rc4-hmac/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
-#sed -i "/aes128-cts-hmac-sha1-96/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+	# [04] OU=SERVERS
+	OUSERVERS=$PD/conf/ou=config/ads-directoryserviceid=default/ou=servers
+	sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
+sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
+sed -i "/des-cbc-md5/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+sed -i "/des3-cbc-sha1-kd/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+sed -i "/rc4-hmac/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+sed -i "/aes128-cts-hmac-sha1-96/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
 
-#sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
-#sed -i "s/ldap.example.com/$LDAPHOST/g" $OUSERVERS/ads-serverid=ldapserver.ldif
-#sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
-#sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+sed -i "s/ldap.example.com/$LDAPHOST/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=ldapserver.ldif
 
 # [05] OU=CONFIG
 #OUCONFIG=$PD/conf/ou=config
@@ -170,11 +171,11 @@ if [[ "$OSREL" -ne "0" ]]; then
 #sed -i "s/ads-enabled: FALSE/ads-enabled: TRUE/g" $OUCONFIG/ads-directoryserviceid=default/ou=interceptors/ads-interceptorid=keyderivationinterceptor.ldif
 
 #CONF=$PD/conf
-#sed -i "s/ldap.example.com/$LDAPHOST/g" $CONF/config.ldif_migrated
-#sed -i "s/dc=com/dc=$EXTSMALL/g" $CONF/config.ldif_migrated
-#sed -i "s/EXAMPLE.COM/$REALM/g" $CONF/config.ldif_migrated
-#sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $CONF/config.ldif_migrated
-#sed -i "s/example/$LDAPNAME/g" $CONF/config.ldif_migrated
+sed -i "s/ldap.example.com/$LDAPHOST/g" $CONF/config.ldif_migrated
+sed -i "s/dc=com/dc=$EXTSMALL/g" $CONF/config.ldif_migrated
+sed -i "s/EXAMPLE.COM/$REALM/g" $CONF/config.ldif_migrated
+sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $CONF/config.ldif_migrated
+sed -i "s/example/$LDAPNAME/g" $CONF/config.ldif_migrated
 
 	printf "Applied.\n";
 else
