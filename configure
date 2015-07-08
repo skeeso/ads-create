@@ -186,6 +186,7 @@ fi
 #egrep -R "$LDAPNAME" $CONF/
 
 exec_prepare
-exec_config
-apply_config
+/etc/init.d/apacheds-2.0.0-M20-default start
+#exec_config
+#apply_config
 exit 0
