@@ -191,6 +191,15 @@ printf "Removed example.";
 
 function start_krb5(){
 cat <<EOM > $TMP/start.ldif
+dn: ads-interceptorId=keyDerivationInterceptor,ou=interceptors,ads-directoryServiceId=default,ou=config
+changetype: modify
+delete: ads-enabled
+ads-enabled: FALSE
+-
+add: ads-enabled
+ads-enabled: TRUE
+-
+
 dn: ads-serverId=kerberosServer,ou=servers,ads-directoryServiceId=default,ou=config
 changetype: modify
 delete: ads-enabled
@@ -198,6 +207,7 @@ ads-enabled: FALSE
 -
 add: ads-enabled
 ads-enabled: TRUE
+-
 
 EOM
 ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f $TMP/start.ldif
