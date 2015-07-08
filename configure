@@ -146,9 +146,6 @@ printf "\033[1m\nxxxxxxxxxx\n[05.i] Creating configuration...\nxxxxxxxxxx\033[0m
 function apply_config(){
 printf "\033[1m\nxxxxxxxxxx\n[06.i] Applying changes...\nxxxxxxxxxx\033[0m\n\n";sleep 1
 if [[ "$OSREL" -ne "0" ]]; then
-	cp -R $PD/conf/ /var/lib/apacheds-2.0.0-M20/default/.
-	chown -R apacheds:apacheds /var/lib/apacheds-2.0.0-M20/
-
 	# [F] OU=SERVERS
 	OUSERVERS=$PD/conf/ou=config/ads-directoryserviceid=default/ou=servers
 		sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
@@ -161,7 +158,6 @@ if [[ "$OSREL" -ne "0" ]]; then
 		sed -i "s/ldap.example.com/$LDAPHOST/g" $OUSERVERS/ads-serverid=ldapserver.ldif
 		sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
 		sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=ldapserver.ldif
-
 	# [G] CONF
 	CONF=$PD/conf
 		sed -i "s/ldap.example.com/$LDAPHOST/g" $CONF/config.ldif_migrated
@@ -169,6 +165,9 @@ if [[ "$OSREL" -ne "0" ]]; then
 		sed -i "s/EXAMPLE.COM/$REALM/g" $CONF/config.ldif_migrated
 		sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $CONF/config.ldif_migrated
 		sed -i "s/example/$LDAPNAME/g" $CONF/config.ldif_migrated
+
+        cp -R $PD/conf/ /var/lib/apacheds-2.0.0-M20/default/.
+        chown -R apacheds:apacheds /var/lib/apacheds-2.0.0-M20/
 	printf "Config applied.\n";
 else
 	printf "\033[1mxxxxxxxxxx\n[06.i] Applying changes XXX...\nxxxxxxxxxx\033[0m\n\n";sleep 1
