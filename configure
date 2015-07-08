@@ -201,58 +201,22 @@ cat <<EOC > $TMP/groups.ldif
 version: 1
 
 dn: dc=security,dc=$LDAPNAME,dc=$EXTSMALL
+changetype: add
 objectClass: top
 objectClass: domain
 dc: security
 -
 dn: ou=services,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
+changetype: add
 objectClass: top
 objectClass: organizationalUnit
 ou: services
 -
 dn: ou=users,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
+changetype: add
 objectClass: top
 objectClass: organizationalUnit
 ou: users
--
-dn: uid=krbtgt,ou=services,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
-objectClass: top
-objectClass: organizationalUnit
-objectClass: krb5KDCEntry
-objectClass: uidObject
-objectClass: krb5Principal
-krb5KeyVersionNumber: 0
-krb5PrincipalName: krbtgt/$REALM@$REALM
-ou: LDAP
-uid: krbtgt
-userPassword:: randomkey
--
-dn: uid=ldap,ou=services,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
-objectClass: top
-objectClass: organizationalUnit
-objectClass: krb5KDCEntry
-objectClass: uidObject
-objectClass: krb5Principal
-krb5KeyVersionNumber: 0
-krb5PrincipalName: ldap/$LDAPHOST@$REALM
-ou: TGT
-uid: ldap
-userPassword:: randomkey
--
-dn: uid=majsf,ou=users,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
-objectClass: krb5Principal
-objectClass: organizationalPerson
-objectClass: person
-objectClass: uidObject
-objectClass: krb5KDCEntry
-objectClass: top
-objectClass: inetOrgPerson
-cn: majsf
-krb5KeyVersionNumber: 1
-krb5PrincipalName: majsf@$REALM
-sn: majsf
-uid: majsf
-userPassword:: q1w2e3r4
 
 EOC
 
