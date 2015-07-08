@@ -170,12 +170,30 @@ sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=ldapserver.ldif
 #sed -i "s/ads-dsAllowAnonymousAccess: FALSE/ads-dsAllowAnonymousAccess: TRUE/g" $OUCONFIG/ads-directoryserviceid=default.ldif
 #sed -i "s/ads-enabled: FALSE/ads-enabled: TRUE/g" $OUCONFIG/ads-directoryserviceid=default/ou=interceptors/ads-interceptorid=keyderivationinterceptor.ldif
 
-#CONF=$PD/conf
+CONF=$PD/conf
 sed -i "s/ldap.example.com/$LDAPHOST/g" $CONF/config.ldif_migrated
 sed -i "s/dc=com/dc=$EXTSMALL/g" $CONF/config.ldif_migrated
 sed -i "s/EXAMPLE.COM/$REALM/g" $CONF/config.ldif_migrated
 sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $CONF/config.ldif_migrated
 sed -i "s/example/$LDAPNAME/g" $CONF/config.ldif_migrated
+
+/etc/init.d/apacheds-2.0.0-M20-default start
+sleep 15
+lsof -i:10389
+
+cat <<EOD > $TMP/delexam.ldif
+dn: ads-partitionId=system,ou=partitions,ads-directoryServiceId=default,ou=config
+changetype: modify
+delete: ads-jdbmPartitionOptimizerEnabled
+
+dn: ads-partitionId=example,ou=partitions,ads-directoryServiceId=default,ou=config
+changetype: delete
+
+dn: dc=example,dc=com
+changetype: delete
+EOD
+
+ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f /tmp/delexam.ldif
 
 	printf "Applied.\n";
 else
@@ -197,6 +215,7 @@ lsof -i:10389
 
 exec_config
 apply_config
+
 
 
 
