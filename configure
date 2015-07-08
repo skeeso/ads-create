@@ -260,7 +260,20 @@ userPassword: q1w2e3r4
 
 EOC
 
+cat <<EOM > $TMP/start.ldif
+dn: ads-serverId=kerberosServer,ou=servers,ads-directoryServiceId=default,ou=config
+changetype: modify
+delete: ads-enabled
+ads-enabled: FALSE
+-
+add: ads-enabled
+ads-enabled: TRUE
+
+EOM
+
 #ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f /tmp/groups.ldif
+ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f /tmp/start.ldif
+echo "kerberos applied"
 }
 
 exec_prepare
@@ -284,9 +297,9 @@ sleep 15
 lsof -i:10389
 
 # [05] OU=CONFIG
-OUCONFIG=$PD/conf/ou=config
-sed -i "s/ads-dsAllowAnonymousAccess: FALSE/ads-dsAllowAnonymousAccess: TRUE/g" $OUCONFIG/ads-directoryserviceid=default.ldif
-sed -i "s/ads-enabled: FALSE/ads-enabled: TRUE/g" $OUCONFIG/ads-directoryserviceid=default/ou=interceptors/ads-interceptorid=keyderivationinterceptor.ldif
+#OUCONFIG=$PD/conf/ou=config
+#sed -i "s/ads-dsAllowAnonymousAccess: FALSE/ads-dsAllowAnonymousAccess: TRUE/g" $OUCONFIG/ads-directoryserviceid=default.ldif
+#sed -i "s/ads-enabled: FALSE/ads-enabled: TRUE/g" $OUCONFIG/ads-directoryserviceid=default/ou=interceptors/ads-interceptorid=keyderivationinterceptor.ldif
 
 /etc/init.d/apacheds-2.0.0-M20-default start
 sleep 15
