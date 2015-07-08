@@ -137,7 +137,7 @@ echo " " >> $TMP/context.ldif
 cat $TMP/context.ldif | base64 -w 0 > $TMP/context.b64
 
 # [07] APPLY CONTEXT ENTRY
-sed -i "s/ZG46IGRjPWV4YW1wbGUsZGM9Y29tCmRjOiBleGFtcGxlCm9iamVjdGNsYXNzOiBkb21haW4Kb2JqZWN0Y2xhc3M6IHRvcAoK/`cat $TMP/context.b64`/g" $CONF/config.ldif_migrated
+#sed -i "s/ZG46IGRjPWV4YW1wbGUsZGM9Y29tCmRjOiBleGFtcGxlCm9iamVjdGNsYXNzOiBkb21haW4Kb2JqZWN0Y2xhc3M6IHRvcAoK/`cat $TMP/context.b64`/g" $CONF/config.ldif_migrated
 sed -i "s/ZG46IGRjPWV4YW1wbGUsZGM9Y29tCmRjOiBleGFtcGxlCm9iamVjdGNsYXNzOiBkb21haW4Kb2JqZWN0Y2xhc3M6IHRvcAoK/`cat $TMP/context.b64`/g" $PARTITIONS/ads-partitionid=$LDAPNAME.ldif
 
 printf "Completed.\n";
@@ -187,6 +187,10 @@ fi
 
 exec_prepare
 /etc/init.d/apacheds-2.0.0-M20-default start
-#exec_config
+lsof -i:10389
+/etc/init.d/apacheds-2.0.0-M20-default stop
+exec_config
+
+
 #apply_config
 exit 0
