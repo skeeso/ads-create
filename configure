@@ -153,21 +153,16 @@ if [[ "$OSREL" -ne "0" ]]; then
 	# [04] OU=SERVERS
 	OUSERVERS=$PD/conf/ou=config/ads-directoryserviceid=default/ou=servers
 	sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
-sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
-sed -i "/des-cbc-md5/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
-sed -i "/des3-cbc-sha1-kd/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
-sed -i "/rc4-hmac/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
-sed -i "/aes128-cts-hmac-sha1-96/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+	sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=kerberosserver.ldif
+	sed -i "/des-cbc-md5/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+	sed -i "/des3-cbc-sha1-kd/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+	sed -i "/rc4-hmac/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
+	sed -i "/aes128-cts-hmac-sha1-96/d" $OUSERVERS/ads-serverid=kerberosserver.ldif
 
-sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
-sed -i "s/ldap.example.com/$LDAPHOST/g" $OUSERVERS/ads-serverid=ldapserver.ldif
-sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
-sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=ldapserver.ldif
-
-# [05] OU=CONFIG
-#OUCONFIG=$PD/conf/ou=config
-#sed -i "s/ads-dsAllowAnonymousAccess: FALSE/ads-dsAllowAnonymousAccess: TRUE/g" $OUCONFIG/ads-directoryserviceid=default.ldif
-#sed -i "s/ads-enabled: FALSE/ads-enabled: TRUE/g" $OUCONFIG/ads-directoryserviceid=default/ou=interceptors/ads-interceptorid=keyderivationinterceptor.ldif
+	sed -i "s/ou=users,dc=example,dc=com/dc=security,dc=$LDAPNAME,dc=$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+	sed -i "s/ldap.example.com/$LDAPHOST/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+	sed -i "s/example.com/$LDAPNAME.$EXTSMALL/g" $OUSERVERS/ads-serverid=ldapserver.ldif
+	sed -i "s/EXAMPLE.COM/$REALM/g" $OUSERVERS/ads-serverid=ldapserver.ldif
 
 CONF=$PD/conf
 sed -i "s/ldap.example.com/$LDAPHOST/g" $CONF/config.ldif_migrated
@@ -186,10 +181,7 @@ version: 1
 dn: ads-partitionId=system,ou=partitions,ads-directoryServiceId=default,ou=config
 changetype: modify
 delete: ads-jdbmPartitionOptimizerEnabled
--
-dn: ads-partitionId=example,ou=partitions,ads-directoryServiceId=default,ou=config
-changetype: delete
--
+
 dn: dc=example,dc=com
 changetype: delete
 
@@ -203,10 +195,72 @@ else
 fi
 }
 
-# [08] SHOW CONFIGURATION
-#egrep -R "$LDAPNAME" $CONF/
+
+function load_data(){
+cat <<EOC > $TMP/groups.ldif
+version: 1
+
+dn: dc=security,dc=$LDAPNAME,dc=$EXTSMALL
+objectClass: top
+objectClass: domain
+dc: security
+
+dn: ou=services,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
+objectClass: top
+objectClass: organizationalUnit
+ou: services
+
+dn: ou=users,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
+objectClass: top
+objectClass: organizationalUnit
+ou: users
+
+dn: uid=krbtgt,ou=services,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
+objectClass: top
+objectClass: organizationalUnit
+objectClass: krb5KDCEntry
+objectClass: uidObject
+objectClass: krb5Principal
+krb5KeyVersionNumber: 0
+krb5PrincipalName: krbtgt/$REALM@$REALM
+ou: LDAP
+uid: krbtgt
+userPassword:: randomkey
+
+dn: uid=ldap,ou=services,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
+objectClass: top
+objectClass: organizationalUnit
+objectClass: krb5KDCEntry
+objectClass: uidObject
+objectClass: krb5Principal
+krb5KeyVersionNumber: 0
+krb5PrincipalName: ldap/$LDAPHOST@$REALM
+ou: TGT
+uid: ldap
+userPassword:: randomkey
+
+dn: uid=majsf,ou=users,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
+objectClass: krb5Principal
+objectClass: organizationalPerson
+objectClass: person
+objectClass: uidObject
+objectClass: krb5KDCEntry
+objectClass: top
+objectClass: inetOrgPerson
+cn: majsf
+krb5KeyVersionNumber: 1
+krb5PrincipalName: majsf@$REALM
+sn: majsf
+uid: majsf
+userPassword:: q1w2e3r4
+
+EOC
+
+ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f /tmp/groups.ldif
+}
 
 exec_prepare
+
 /etc/init.d/apacheds-2.0.0-M20-default start
 sleep 15
 lsof -i:10389
@@ -220,6 +274,17 @@ rm -rf /var/lib/apacheds-2.0.0-M20/default/cache/*
 
 exec_config
 apply_config
+load_data
+
+#/etc/init.d/apacheds-2.0.0-M20-default stop
+#sleep 15
+#lsof -i:10389
+
+
+# [05] OU=CONFIG
+#OUCONFIG=$PD/conf/ou=config
+#sed -i "s/ads-dsAllowAnonymousAccess: FALSE/ads-dsAllowAnonymousAccess: TRUE/g" $OUCONFIG/ads-directoryserviceid=default.ldif
+#sed -i "s/ads-enabled: FALSE/ads-enabled: TRUE/g" $OUCONFIG/ads-directoryserviceid=default/ou=interceptors/ads-interceptorid=keyderivationinterceptor.ldif
 
 
 
