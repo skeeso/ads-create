@@ -177,8 +177,6 @@ fi
 
 function addto_conf(){
 cat <<EOD > $TMP/delexam.ldif
-version: 1
-
 dn: ads-partitionId=system,ou=partitions,ads-directoryServiceId=default,ou=config
 changetype: modify
 delete: ads-jdbmPartitionOptimizerEnabled
@@ -190,6 +188,21 @@ EOD
 
 ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f $TMP/delexam.ldif
 printf "Removed example.";
+}
+
+function start_krb5(){
+cat <<EOM > $TMP/start.ldif
+dn: ads-serverId=kerberosServer,ou=servers,ads-directoryServiceId=default,ou=config
+changetype: modify
+delete: ads-enabled
+ads-enabled: FALSE
+-
+add: ads-enabled
+ads-enabled: TRUE
+
+EOM
+ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f $TMP/start.ldif
+printf "Kerberos has been started.\n";
 }
 
 function load_data(){
@@ -256,34 +269,8 @@ userPassword: q1w2e3r4
 
 EOC
 
-cat <<EOM > $TMP/start.ldif
-dn: ads-serverId=kerberosServer,ou=servers,ads-directoryServiceId=default,ou=config
-changetype: modify
-delete: ads-enabled
-ads-enabled: FALSE
--
-add: ads-enabled
-ads-enabled: TRUE
-
-EOM
-
 ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f /tmp/groups.ldif
-printf "LDIF loaded.\n";
-}
-
-function start_krb5(){
-cat <<EOM > $TMP/start.ldif
-dn: ads-serverId=kerberosServer,ou=servers,ads-directoryServiceId=default,ou=config
-changetype: modify
-delete: ads-enabled
-ads-enabled: FALSE
--
-add: ads-enabled
-ads-enabled: TRUE
-
-EOM
-ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f $TMP/start.ldif
-printf "Kerberos has been started...\n";
+printf "Groups LDIF loaded.\n";
 }
 
 exec_prepare
@@ -309,6 +296,8 @@ lsof -i:10389
 
 addto_conf
 
+load_data
+
 start_krb5
 
 # RESTARTING ADS
@@ -320,15 +309,15 @@ sleep 15
 lsof -i:10389
 
 # LOADING LDIF DATA
-load_data
+#load_data
 
 # RESTARTING ADS
-/etc/init.d/apacheds-2.0.0-M20-default stop
-sleep 15
-lsof -i:10389
-/etc/init.d/apacheds-2.0.0-M20-default start
-sleep 15
-lsof -i:10389
+#/etc/init.d/apacheds-2.0.0-M20-default stop
+#sleep 15
+#lsof -i:10389
+#/etc/init.d/apacheds-2.0.0-M20-default start
+#sleep 15
+#lsof -i:10389
 
 
 
