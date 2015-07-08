@@ -181,7 +181,7 @@ version: 1
 dn: ads-partitionId=system,ou=partitions,ads-directoryServiceId=default,ou=config
 changetype: modify
 delete: ads-jdbmPartitionOptimizerEnabled
-
+-
 dn: dc=example,dc=com
 changetype: delete
 
@@ -204,17 +204,17 @@ dn: dc=security,dc=$LDAPNAME,dc=$EXTSMALL
 objectClass: top
 objectClass: domain
 dc: security
-
+-
 dn: ou=services,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
 objectClass: top
 objectClass: organizationalUnit
 ou: services
-
+-
 dn: ou=users,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
 objectClass: top
 objectClass: organizationalUnit
 ou: users
-
+-
 dn: uid=krbtgt,ou=services,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
 objectClass: top
 objectClass: organizationalUnit
@@ -226,7 +226,7 @@ krb5PrincipalName: krbtgt/$REALM@$REALM
 ou: LDAP
 uid: krbtgt
 userPassword:: randomkey
-
+-
 dn: uid=ldap,ou=services,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
 objectClass: top
 objectClass: organizationalUnit
@@ -238,7 +238,7 @@ krb5PrincipalName: ldap/$LDAPHOST@$REALM
 ou: TGT
 uid: ldap
 userPassword:: randomkey
-
+-
 dn: uid=majsf,ou=users,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
 objectClass: krb5Principal
 objectClass: organizationalPerson
