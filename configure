@@ -176,10 +176,98 @@ fi
 
 function addto_conf(){
 cat <<EOD > $TMP/delexam.ldif
-dn: ads-partitionId=system,ou=partitions,ads-directoryServiceId=default,ou=config
+dn: ads-serverId=ldapServer,ou=servers,ads-directoryServiceId=default,ou=config
 changetype: modify
-delete: ads-jdbmPartitionOptimizerEnabled
+delete: ads-searchBaseDN
+ads-searchBaseDN: ou=users,ou=system
 -
+add: ads-searchBaseDN
+ads-searchBaseDN: dc=security,dc=arpa,dc=ph
+-
+delete: ads-saslPrincipal
+ads-saslPrincipal: ldap/ldap.example.com@EXAMPLE.COM
+-
+add: ads-saslPrincipal
+ads-saslPrincipal: ldap/ldap.arpa.ph@ARPA.PH
+-
+add: ads-saslRealms
+ads-saslRealms: arpa.ph
+-
+delete: ads-saslHost
+ads-saslHost: ldap.example.com
+-
+add: ads-saslHost
+ads-saslHost: ldap.arpa.ph
+-
+
+dn: ads-serverId=kerberosServer,ou=servers,ads-directoryServiceId=default,ou=config
+changetype: modify
+delete: ads-searchBaseDN
+ads-searchBaseDN: ou=users,dc=example,dc=com
+-
+add: ads-searchBaseDN
+ads-searchBaseDN: dc=security,dc=arpa,dc=ph
+-
+delete: ads-krbEncryptionTypes
+ads-krbEncryptionTypes: des3-cbc-sha1-kd
+-
+delete: ads-krbEncryptionTypes
+ads-krbEncryptionTypes: des-cbc-md5
+-
+delete: ads-krbPrimaryRealm
+ads-krbPrimaryRealm: EXAMPLE.COM
+-
+add: ads-krbPrimaryRealm
+ads-krbPrimaryRealm: ARPA.PH
+-
+
+dn: ads-indexAttributeId=apachePresence,ou=indexes,ads-partitionId=example,ou=partitions,ads-directoryServiceId=default,ou=config
+changetype: delete
+
+dn: ads-indexAttributeId=apacheRdn,ou=indexes,ads-partitionId=arpa,ou=partitions,ads-directoryServiceId=default,ou=config
+changetype: modify
+delete: ads-indexCacheSize
+-
+
+dn: ads-indexAttributeId=apachePresence,ou=indexes,ads-partitionId=arpa,ou=partitions,ads-directoryServiceId=default,ou=config
+changetype: modify
+delete: ads-indexCacheSize
+-
+
+dn: ads-indexAttributeId=objectClass,ou=indexes,ads-partitionId=arpa,ou=partitions,ads-directoryServiceId=default,ou=config
+changetype: modify
+delete: ads-indexCacheSize
+-
+
+dn: ads-indexAttributeId=entryCSN,ou=indexes,ads-partitionId=arpa,ou=partitions,ads-directoryServiceId=default,ou=config
+changetype: modify
+delete: ads-indexCacheSize
+-
+
+dn: ads-indexAttributeId=uid,ou=indexes,ads-partitionId=arpa,ou=partitions,ads-directoryServiceId=default,ou=config
+changetype: modify
+delete: ads-indexCacheSize
+-
+
+dn: ads-indexAttributeId=apacheSubAlias,ou=indexes,ads-partitionId=arpa,ou=partitions,ads-directoryServiceId=default,ou=config
+changetype: modify
+delete: ads-indexCacheSize
+-
+
+dn: ads-indexAttributeId=apacheAlias,ou=indexes,ads-partitionId=arpa,ou=partitions,ads-directoryServiceId=default,ou=config
+changetype: modify
+delete: ads-indexCacheSize
+-
+
+dn: ads-serverId=ldapServer,ou=servers,ads-directoryServiceId=default,ou=config
+changetype: modify
+delete: ads-saslRealms
+ads-saslRealms: example.com
+-
+delete: ads-saslRealms
+ads-saslRealms: apache.org
+-
+
 dn: dc=example,dc=com
 changetype: delete
 
@@ -278,7 +366,7 @@ userPassword: q1w2e3r4
 
 EOC
 
-#ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f /tmp/groups.ldif
+ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f $TMP/groups.ldif
 printf "Groups LDIF loaded.\n";
 }
 
@@ -320,16 +408,21 @@ lsof -i:10389
 # LOADING LDIF DATA
 load_data
 
+ldapsearch -h ldap.arpa.ph -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=arpa,dc=ph" uid=majsf
+ldapsearch -h ldap.arpa.ph -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=arpa,dc=ph" uid=krbtgt
+ldapsearch -h ldap.arpa.ph -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=arpa,dc=ph" uid=ldap
+
+# LOAD ADDTO_CONF
+printf "Loading addto_conf\n";
+addto_conf
+
 # RESTARTING ADS
-#/etc/init.d/apacheds-2.0.0-M20-default stop
-#sleep 15
-#lsof -i:10389
-#/etc/init.d/apacheds-2.0.0-M20-default start
-#sleep 15
-#lsof -i:10389
-
-
-
+/etc/init.d/apacheds-2.0.0-M20-default stop
+sleep 15
+lsof -i:10389
+/etc/init.d/apacheds-2.0.0-M20-default start
+sleep 15
+lsof -i:10389
 
 
 
