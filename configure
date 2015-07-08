@@ -3,6 +3,8 @@ printf "Enter the server's FQDN: ";
 read resp_fqdn
 printf "Enter the REALM: ";
 read resp_realm
+printf "Enter BIND ID: ";
+read bind_id;
 
 LDAPHOST=$resp_fqdn
 LDAPNAME=`echo "$LDAPHOST" | cut -d"." -f2`
@@ -161,22 +163,22 @@ delete: ads-searchBaseDN
 ads-searchBaseDN: ou=users,ou=system
 -
 add: ads-searchBaseDN
-ads-searchBaseDN: dc=security,dc=arpa,dc=ph
+ads-searchBaseDN: dc=security,dc=$LDAPNAME,dc=$EXTSMALL
 -
 delete: ads-saslPrincipal
 ads-saslPrincipal: ldap/ldap.example.com@EXAMPLE.COM
 -
 add: ads-saslPrincipal
-ads-saslPrincipal: ldap/ldap.arpa.ph@ARPA.PH
+ads-saslPrincipal: ldap/$LDAPHOST@$REALM
 -
 add: ads-saslRealms
-ads-saslRealms: arpa.ph
+ads-saslRealms: $LDAPNAME.$EXTSMALL
 -
 delete: ads-saslHost
 ads-saslHost: ldap.example.com
 -
 add: ads-saslHost
-ads-saslHost: ldap.arpa.ph
+ads-saslHost: $LDAPHOST
 -
 
 dn: ads-serverId=kerberosServer,ou=servers,ads-directoryServiceId=default,ou=config
@@ -185,7 +187,7 @@ delete: ads-searchBaseDN
 ads-searchBaseDN: ou=users,dc=example,dc=com
 -
 add: ads-searchBaseDN
-ads-searchBaseDN: dc=security,dc=arpa,dc=ph
+ads-searchBaseDN: dc=security,dc=$LDAPNAME,dc=$EXTSMALL
 -
 delete: ads-krbEncryptionTypes
 ads-krbEncryptionTypes: des3-cbc-sha1-kd
@@ -197,7 +199,7 @@ delete: ads-krbPrimaryRealm
 ads-krbPrimaryRealm: EXAMPLE.COM
 -
 add: ads-krbPrimaryRealm
-ads-krbPrimaryRealm: ARPA.PH
+ads-krbPrimaryRealm: $REALM
 -
 
 dn: ads-indexAttributeId=apachePresence,ou=indexes,ads-partitionId=example,ou=partitions,ads-directoryServiceId=default,ou=config
@@ -332,7 +334,7 @@ ou: TGT
 uid: ldap
 userPassword: randomkey
 
-dn: uid=majsf,ou=users,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
+dn: uid=$bind_id,ou=users,dc=security,dc=$LDAPNAME,dc=$EXTSMALL
 changetype: add
 objectClass: krb5Principal
 objectClass: organizationalPerson
@@ -341,11 +343,11 @@ objectClass: uidObject
 objectClass: krb5KDCEntry
 objectClass: top
 objectClass: inetOrgPerson
-cn: majsf
+cn: $bind_id
 krb5KeyVersionNumber: 1
-krb5PrincipalName: majsf@$REALM
-sn: majsf
-uid: majsf
+krb5PrincipalName: $bind_id@$REALM
+sn: $bind_id
+uid: $bind_id
 userPassword: q1w2e3r4
 
 EOC
@@ -359,10 +361,8 @@ exec_prepare
 /etc/init.d/apacheds-2.0.0-M20-default start
 sleep 15
 lsof -i:10389
-
 /etc/init.d/apacheds-2.0.0-M20-default stop
-sleep 15
-lsof -i:10389
+
 
 exec_config
 
@@ -379,10 +379,9 @@ start_krb5
 # RESTARTING ADS
 /etc/init.d/apacheds-2.0.0-M20-default stop
 sleep 15
-lsof -i:10389
 /etc/init.d/apacheds-2.0.0-M20-default start
-sleep 15
 lsof -i:10389
+lsof -i:60088
 
 ##### CHECKPOINT: STARTING OF KRB IN CONF OK. DATA LOADED MANUALLY. NEED TO AUTOMATE.
 
@@ -390,9 +389,9 @@ lsof -i:10389
 load_data
 
 printf "\033[1m\nxxxxxxxxxx\n[09.i] Testing ldapsearch...\nxxxxxxxxxx\033[0m\n\n";sleep 1
-ldapsearch -h ldap.arpa.ph -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=arpa,dc=ph" uid=majsf
-ldapsearch -h ldap.arpa.ph -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=arpa,dc=ph" uid=krbtgt
-ldapsearch -h ldap.arpa.ph -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=arpa,dc=ph" uid=ldap
+ldapsearch -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=$LDAPNAME,dc=$EXTSMALL" uid=$bind_id
+ldapsearch -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=$LDAPNAME,dc=$EXTSMALL" uid=krbtgt
+ldapsearch -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=$LDAPNAME,dc=$EXTSMALL" uid=ldap
 
 # LOAD ADDTO_CONF
 printf "\033[1m\nxxxxxxxxxx\n[10.i] Applying final changes...\nxxxxxxxxxx\033[0m\n\n";sleep 1
@@ -402,12 +401,11 @@ printf "\033[1m\nxxxxxxxxxx\n[11.i] Final restart...\nxxxxxxxxxx\033[0m\n\n";sle
 # RESTARTING ADS
 /etc/init.d/apacheds-2.0.0-M20-default stop
 sleep 15
-lsof -i:10389
 /etc/init.d/apacheds-2.0.0-M20-default start
-sleep 15
 lsof -i:10389
 lsof -i:60088
-echo "`ktutil -k /tmp/majsf.keytab add -p majsf@ARPA.PH -e aes128-cts-hmac-sha1-96 -V 1`"
-echo "`kinit majsf@ARPA.PH`"
+
+ktutil -k /tmp/$bind_id.keytab add -p $bind_id@$REALM -e aes128-cts-hmac-sha1-96 -V 1
+kinit $bind_id@$REALM
 
 exit 0
