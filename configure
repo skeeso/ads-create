@@ -249,9 +249,6 @@ delete: ads-saslRealms
 ads-saslRealms: apache.org
 -
 
-dn: ads-partitionId=example,ou=partitions,ads-directoryServiceId=default,ou=config
-changetype: delete
-
 dn: dc=example,dc=com
 changetype: delete
 
