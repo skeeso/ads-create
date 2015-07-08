@@ -146,7 +146,7 @@ printf "Completed.\n";
 
 function apply_config(){
 if [[ "$OSREL" -ne "0" ]]; then
-	cp -R $PD/conf /var/lib/apacheds-2.0.0-M20/default/.
+	cp -R $PD/conf/ /var/lib/apacheds-2.0.0-M20/default/.
 	chown -R apacheds:apacheds /var/lib/apacheds-2.0.0-M20/
 	printf "\033[1m\nxxxxxxxxxx\n[06.i] Applying changes...\nxxxxxxxxxx\033[0m\n\n";sleep 1
 
@@ -186,16 +186,10 @@ fi
 #egrep -R "$LDAPNAME" $CONF/
 
 exec_prepare
-/etc/init.d/apacheds-2.0.0-M20-default start
-sleep 15
-lsof -i:10389
-/etc/init.d/apacheds-2.0.0-M20-default stop
-sleep 15
 exec_config
-
+apply_config
+egrep -R "arpa" /var/lib/apacheds-2.0.0-M20/default/conf
 /etc/init.d/apacheds-2.0.0-M20-default start
 sleep 15
 lsof -i:10389
-
-#apply_config
 exit 0
