@@ -1,5 +1,4 @@
-dn: ads-partitionId=system,ou=partitions,ads-directoryServiceId=default,ou=confi
- g
+dn: ads-partitionId=system,ou=partitions,ads-directoryServiceId=default,ou=config
 ads-partitioncachesize: 10000
 ads-partitionid: system
 objectclass: top
