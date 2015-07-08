@@ -315,10 +315,10 @@ lsof -i:10389
 sleep 15
 lsof -i:10389
 
-##### CHECKPOINT
+##### CHECKPOINT: STARTING OF KRB IN CONF OK. DATA LOADED MANUALLY. NEED TO AUTOMATE.
 
 # LOADING LDIF DATA
-#load_data
+load_data
 
 # RESTARTING ADS
 #/etc/init.d/apacheds-2.0.0-M20-default stop
