@@ -281,8 +281,9 @@ lsof -i:10389
 /etc/init.d/apacheds-2.0.0-M20-default stop
 sleep 15
 lsof -i:10389
-rm -rf /var/lib/apacheds-2.0.0-M20/default/partitions/example/
-rm -rf /var/lib/apacheds-2.0.0-M20/default/cache/*
+
+#rm -rf /var/lib/apacheds-2.0.0-M20/default/partitions/example/
+#rm -rf /var/lib/apacheds-2.0.0-M20/default/cache/*
 
 exec_config
 
@@ -293,19 +294,19 @@ apply_config
 sleep 15
 lsof -i:10389
 
-addto_conf
+#addto_conf
 
-start_krb5
+#start_krb5
 
-load_data
+#load_data
 
 # RESTARTING ADS
-/etc/init.d/apacheds-2.0.0-M20-default stop
-sleep 15
-lsof -i:10389
-/etc/init.d/apacheds-2.0.0-M20-default start
-sleep 15
-lsof -i:10389
+#/etc/init.d/apacheds-2.0.0-M20-default stop
+#sleep 15
+#lsof -i:10389
+#/etc/init.d/apacheds-2.0.0-M20-default start
+#sleep 15
+#lsof -i:10389
 
 # LOADING LDIF DATA
 #load_data
