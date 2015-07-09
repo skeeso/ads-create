@@ -1,19 +1,10 @@
 #!/bin/bash
-printf "Enter the server's FQDN: ";
-read resp_fqdn
-printf "Enter the REALM: ";
-read resp_realm
-printf "Enter BIND ID: ";
-read bind_id;
 
-LDAPHOST=$resp_fqdn
-LDAPNAME=`echo "$LDAPHOST" | cut -d"." -f2`
-EXTSMALL=`echo "$LDAPHOST" | cut -d"." -f3`
-REALM=$resp_realm
-REALMNAME=`echo "$REALM" | cut -d"." -f1`
-EXTBIG=`echo "$REALM" | cut -d"." -f2`
-TMP=/tmp
-PD=`pwd`
+main() {
+        printf "\033[1mADS-CREATE:Apache Directory Studio LDAP and Kerberos Configurator - `date` $\033[0m\n";
+	printf "\033[1m--execall\033[0m\n";
+	printf "\033[1m--prep\033[0m\n";
+}
 
 # [01] EXECUTE PREPARATION
 function exec_prepare(){
@@ -359,58 +350,95 @@ ldapmodify -x -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -c -f $
 printf "Done.\n";
 }
 
-exec_prepare
 
-/etc/init.d/apacheds-2.0.0-M20-default start
-sleep 15
-lsof -i:10389
-/etc/init.d/apacheds-2.0.0-M20-default stop
-sleep 15
+[[ $# -lt $NARGS ]] && main && exit $BARGS
 
-exec_config
+case $1 in
+        --execall | --EXECALL)
+        # EXECUTE ALL
+	printf "Enter the server's FQDN: ";
+	read resp_fqdn
+	printf "Enter the REALM: ";
+	read resp_realm
+	printf "Enter BIND ID: ";
+	read bind_id;
 
-apply_config
+	LDAPHOST=$resp_fqdn
+	LDAPNAME=`echo "$LDAPHOST" | cut -d"." -f2`
+	EXTSMALL=`echo "$LDAPHOST" | cut -d"." -f3`
+	REALM=$resp_realm
+	REALMNAME=`echo "$REALM" | cut -d"." -f1`
+	EXTBIG=`echo "$REALM" | cut -d"." -f2`
+	TMP=/tmp
+	PD=`pwd`
 
-# START ADS
-/etc/init.d/apacheds-2.0.0-M20-default start
-sleep 15
-lsof -i:10389
+	exec_prepare
 
-# START KERBEROS IN CONF
-start_krb5
+	/etc/init.d/apacheds-2.0.0-M20-default start
+	sleep 15
+	lsof -i:10389
+	/etc/init.d/apacheds-2.0.0-M20-default stop
+	sleep 15
 
-# RESTARTING ADS
-/etc/init.d/apacheds-2.0.0-M20-default stop
-sleep 15
-/etc/init.d/apacheds-2.0.0-M20-default start
-sleep 15
-lsof -i:10389
-lsof -i:60088
+	exec_config
 
-##### CHECKPOINT: STARTING OF KRB IN CONF OK. DATA LOADED MANUALLY. NEED TO AUTOMATE.
+	apply_config
 
-# LOADING LDIF DATA
-load_data
+	# START ADS
+	/etc/init.d/apacheds-2.0.0-M20-default start
+	sleep 15
+	lsof -i:10389
 
-printf "\033[1m\nxxxxxxxxxx\n[09.i] Testing ldapsearch...\nxxxxxxxxxx\033[0m\n\n";sleep 1
-ldapsearch -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=$LDAPNAME,dc=$EXTSMALL" uid=$bind_id
-ldapsearch -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=$LDAPNAME,dc=$EXTSMALL" uid=krbtgt
-ldapsearch -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=$LDAPNAME,dc=$EXTSMALL" uid=ldap
+	# START KERBEROS IN CONF
+	start_krb5
 
-# LOAD ADDTO_CONF
-printf "\033[1m\nxxxxxxxxxx\n[10.i] Applying final changes...\nxxxxxxxxxx\033[0m\n\n";sleep 1
-addto_conf
+	# RESTARTING ADS
+	/etc/init.d/apacheds-2.0.0-M20-default stop
+	sleep 15
+	/etc/init.d/apacheds-2.0.0-M20-default start
+	sleep 15
+	lsof -i:10389
+	lsof -i:60088
 
-printf "\033[1m\nxxxxxxxxxx\n[11.i] Final restart...\nxxxxxxxxxx\033[0m\n\n";sleep 1
-# RESTARTING ADS
-/etc/init.d/apacheds-2.0.0-M20-default stop
-sleep 15
-/etc/init.d/apacheds-2.0.0-M20-default start
-sleep 15
-lsof -i:10389
-lsof -i:60088
+	##### CHECKPOINT: STARTING OF KRB IN CONF OK. DATA LOADED MANUALLY. NEED TO AUTOMATE.
+	# LOADING LDIF DATA
+	load_data
 
-ktutil -k /tmp/$bind_id.keytab add -p $bind_id@$REALM -e aes128-cts-hmac-sha1-96 -V 1
-kinit $bind_id@$REALM
+	printf "\033[1m\nxxxxxxxxxx\n[09.i] Testing ldapsearch...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+	ldapsearch -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=$LDAPNAME,dc=$EXTSMALL" uid=$bind_id
+	ldapsearch -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=$LDAPNAME,dc=$EXTSMALL" uid=krbtgt
+	ldapsearch -h $LDAPHOST -p 10389 -D "uid=admin,ou=system" -w "secret" -b "dc=$LDAPNAME,dc=$EXTSMALL" uid=ldap
 
+	# LOAD ADDTO_CONF
+	printf "\033[1m\nxxxxxxxxxx\n[10.i] Applying final changes...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+	addto_conf
+
+	printf "\033[1m\nxxxxxxxxxx\n[11.i] Final restart...\nxxxxxxxxxx\033[0m\n\n";sleep 1
+	# RESTARTING ADS
+	/etc/init.d/apacheds-2.0.0-M20-default stop
+	sleep 15
+	/etc/init.d/apacheds-2.0.0-M20-default start
+	sleep 15
+	lsof -i:10389
+	lsof -i:60088
+
+	ktutil -k /tmp/$bind_id.keytab add -p $bind_id@$REALM -e aes128-cts-hmac-sha1-96 -V 1
+	kinit $bind_id@$REALM
+	exit 0
+        ;;
+
+        --prep | --PREP)
+        # PREPRE ONLY
+        exec_prepare
+
+	exit 0
+        ;;
+
+        *)
+        printf "\033[1mADS-CREATE:Apache Directory Studio LDAP and Kerberos Configurator - `date` $\033[0m\n";
+        printf "\033[1m--execall\033[0m\n";
+        printf "\033[1m--prep\033[0m\n";
+
+esac
 exit 0
+
